@@ -1,6 +1,7 @@
+from collections import defaultdict
 from enum import Enum
 from random import random
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, NamedTuple
 from pathfinding.finder.a_star import AStarFinder
 from pathfinding.core.grid import Grid
 from gupb.model import arenas, coordinates, tiles
@@ -39,6 +40,12 @@ BOW = Bow().description()
 class StrategyAction(Enum):
     HIDE = 1,
     GO_TO_MENHIR = 2,
+
+
+class State(NamedTuple):
+    arena: str
+    menhir: int
+    mist: int
 
 
 def points_dist(cord1, cord2):
@@ -231,7 +238,9 @@ class ShallowMindController:
         self.prev_champion: ChampionDescription = None
         self.arena: ArenaMapped = None
         self.action_queue: SimpleQueue[characters.Action] = SimpleQueue()
-        self.q = None
+        self.q: Dict[Tuple[State, characters.Action], float] = defaultdict(lambda: 1.0)
+        self.old_state: State = None
+        self.old_action: characters.Action = None
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, ShallowMindController):
@@ -252,7 +261,7 @@ class ShallowMindController:
         return max(actions, key=actions.get)
 
     def pick_action(self, state):
-        if random.uniform(0, 1) < EPSILON:
+        if random() < EPSILON:
             action = random.choice([StrategyAction.GO_TO_MENHIR, StrategyAction.HIDE])
             return state, action
         else:
@@ -260,12 +269,12 @@ class ShallowMindController:
             return state, action
 
     def update_q(self, old_state, action, reward, new_state):
-        self.q[(old_state, action)] = self.q[(old_state, action)] + LEARNING_RATE * (reward +
-                                        DISCOUNT_FACTOR * self.q[(new_state, self.best_action(new_state))]
-                                                                                     - self.q[(old_state, action)])
+        self.q[(old_state, action)] = self.q[(old_state, action)] + LEARNING_RATE * (
+                reward + DISCOUNT_FACTOR * self.q[(new_state, self.best_action(new_state))] - self.q[
+            (old_state, action)])
 
     def map_to_state(self, length: int) -> str:
-        return self.arena.name + str(MAPPING_CONST/length) + str(MAPPING_CONST/self.arena.calc_mist_dist())
+        return self.arena.name + str(MAPPING_CONST / length) + str(MAPPING_CONST / self.arena.calc_mist_dist())
 
     def calculate_reward(self, champion_health):
         if champion_health != self.prev_champion.health:
@@ -289,11 +298,12 @@ class ShallowMindController:
         action, length = self.arena.find_move_to_menhir()
         state = self.map_to_state(length)
         state, strategy_action = self.pick_action(state)
-        if self.q is not None:
-            (old_state, old_action) = self.q
+        if self.old_state and self.old_action:
             reward = self.calculate_reward(champ.health)
-            self.update_q(old_state, old_action, reward, state)
-
+            self.update_q(self.old_state, self.old_action, reward, state)
+            self.old_state = state
+            self.old_action = strategy_action
+        print(strategy_action)
         if strategy_action == StrategyAction.HIDE:
             action = self.arena.find_escape_action()
             if action:
