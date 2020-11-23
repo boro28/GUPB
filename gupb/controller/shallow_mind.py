@@ -1,3 +1,5 @@
+from enum import Enum
+from random import random
 from typing import Dict, Tuple, List
 from pathfinding.finder.a_star import AStarFinder
 from pathfinding.core.grid import Grid
@@ -26,7 +28,16 @@ finder = AStarFinder()
 
 FIELD_ATTACKED = FIELD_WEIGHT * FIELD_WEIGHT
 
+epsilon = 0.1
+learning_rate = 0.2
+discount_factor = 1.0
+
 BOW = Bow().description()
+
+
+class StrategyAction(Enum):
+    HIDE = 1,
+    GO_TO_MENHIR = 2,
 
 
 def points_dist(cord1, cord2):
@@ -219,7 +230,7 @@ class ShallowMindController:
         self.prev_champion: ChampionDescription = None
         self.arena: ArenaMapped = None
         self.action_queue: SimpleQueue[characters.Action] = SimpleQueue()
-        self.bow_taken = False
+        self.q = None
 
     def __eq__(self, other: object) -> bool:
         if isinstance(other, ShallowMindController):
@@ -235,6 +246,23 @@ class ShallowMindController:
         self.arena.menhir_position = arena_description.menhir_position
         self.bow_taken = False
 
+    def best_action(self, state):
+        actions = {action: self.q[(state, action)] for action in StrategyAction}
+        return max(actions, key=actions.get)
+
+    def pick_action(self, state):
+        if random.uniform(0, 1) < epsilon:
+            action = random.choice([StrategyAction.GO_TO_MENHIR, StrategyAction.HIDE])
+            return state, action
+        else:
+            action = self.best_action(state)
+            return state, action
+
+    def update_q(self, old_state, action, reward, new_state):
+        self.q[(old_state, action)] = self.q[(old_state, action)] + learning_rate * (reward +
+                                        discount_factor * self.q[(new_state, self.best_action(new_state))]
+                                                                                     - self.q[(old_state, action)])
+
     def decide(self, knowledge: characters.ChampionKnowledge) -> characters.Action:
         self.prev_champion = self.arena.champion
         self.arena.prepare_matrix(knowledge)
@@ -247,16 +275,21 @@ class ShallowMindController:
             action, _ = self.arena.find_move_to_nearest_bow()
             if action != characters.Action.DO_NOTHING:
                 return action
-        # todo this need to be redone
-        if self.prev_champion:
-            if champ.health != self.prev_champion.health:
-                action = self.arena.find_escape_action()
-                if action != characters.Action.DO_NOTHING:
-                    self.action_queue.put(characters.Action.STEP_FORWARD)
-                    return action
-        action, length = self.arena.find_move_to_menhir()
-        if action == characters.Action.DO_NOTHING:
-            return self.arena.find_scan_action()
+
+        state = mapToState(self.arena)
+        state, strategy_action = self.pick_action(state)
+        if self.q is not None:
+            (old_state, old_action) = self.q
+            reward = self.calculate_reward()
+            self.update_q(old_state, old_action, reward, state)
+
+        if strategy_action == StrategyAction.HIDE:
+            action = self.arena.find_escape_action()
+            if action:
+                self.action_queue.put(characters.Action.STEP_FORWARD)
+                return action
+
+        action = self.arena.find_move_to_menhir()
         return action
 
     @property
