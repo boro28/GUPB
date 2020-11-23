@@ -31,6 +31,7 @@ FIELD_ATTACKED = FIELD_WEIGHT * FIELD_WEIGHT
 epsilon = 0.1
 learning_rate = 0.2
 discount_factor = 1.0
+MAPPING_CONST = 10.0
 
 BOW = Bow().description()
 
@@ -263,6 +264,15 @@ class ShallowMindController:
                                         discount_factor * self.q[(new_state, self.best_action(new_state))]
                                                                                      - self.q[(old_state, action)])
 
+    def map_to_state(self, length: int) -> str:
+        return self.arena.name + str(MAPPING_CONST/length) + str(MAPPING_CONST/self.arena.calc_mist_dist())
+
+    def calculate_reward(self, champion_health):
+        if champion_health != self.prev_champion.health:
+            return -10
+        else:
+            return 1
+
     def decide(self, knowledge: characters.ChampionKnowledge) -> characters.Action:
         self.prev_champion = self.arena.champion
         self.arena.prepare_matrix(knowledge)
@@ -276,11 +286,11 @@ class ShallowMindController:
             if action != characters.Action.DO_NOTHING:
                 return action
 
-        state = mapToState(self.arena)
+        state = self.map_to_state(points_dist(self.arena.position, self.arena.menhir_position))
         state, strategy_action = self.pick_action(state)
         if self.q is not None:
             (old_state, old_action) = self.q
-            reward = self.calculate_reward()
+            reward = self.calculate_reward(champ.health)
             self.update_q(old_state, old_action, reward, state)
 
         if strategy_action == StrategyAction.HIDE:
