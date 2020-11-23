@@ -28,9 +28,9 @@ finder = AStarFinder()
 
 FIELD_ATTACKED = FIELD_WEIGHT * FIELD_WEIGHT
 
-epsilon = 0.1
-learning_rate = 0.2
-discount_factor = 1.0
+EPSILON = 0.1
+LEARNING_RATE = 0.2
+DISCOUNT_FACTOR = 1.0
 MAPPING_CONST = 10.0
 
 BOW = Bow().description()
@@ -252,7 +252,7 @@ class ShallowMindController:
         return max(actions, key=actions.get)
 
     def pick_action(self, state):
-        if random.uniform(0, 1) < epsilon:
+        if random.uniform(0, 1) < EPSILON:
             action = random.choice([StrategyAction.GO_TO_MENHIR, StrategyAction.HIDE])
             return state, action
         else:
@@ -260,8 +260,8 @@ class ShallowMindController:
             return state, action
 
     def update_q(self, old_state, action, reward, new_state):
-        self.q[(old_state, action)] = self.q[(old_state, action)] + learning_rate * (reward +
-                                        discount_factor * self.q[(new_state, self.best_action(new_state))]
+        self.q[(old_state, action)] = self.q[(old_state, action)] + LEARNING_RATE * (reward +
+                                        DISCOUNT_FACTOR * self.q[(new_state, self.best_action(new_state))]
                                                                                      - self.q[(old_state, action)])
 
     def map_to_state(self, length: int) -> str:
@@ -286,7 +286,8 @@ class ShallowMindController:
             if action != characters.Action.DO_NOTHING:
                 return action
 
-        state = self.map_to_state(points_dist(self.arena.position, self.arena.menhir_position))
+        action, length = self.arena.find_move_to_menhir()
+        state = self.map_to_state(length)
         state, strategy_action = self.pick_action(state)
         if self.q is not None:
             (old_state, old_action) = self.q
@@ -299,7 +300,6 @@ class ShallowMindController:
                 self.action_queue.put(characters.Action.STEP_FORWARD)
                 return action
 
-        action = self.arena.find_move_to_menhir()
         return action
 
     @property
