@@ -5,7 +5,7 @@ from time import time
 
 from gupb.controller.shallow_mind.arenna_wrapper import ArenaWrapper
 from gupb.controller.shallow_mind.consts import StrategyAction, EPSILON, LEARNING_RATE, DISCOUNT_FACTOR, REWARD_CONST, \
-    PUNISHMENT_CONST
+    PUNISHMENT_CONST, LEARN
 from gupb.controller.shallow_mind.q_learning import QLearning
 from gupb.model import characters
 from gupb.model.arenas import ArenaDescription
@@ -13,7 +13,6 @@ from gupb.model.characters import Action, ChampionKnowledge
 from queue import SimpleQueue
 
 path = os.path.join("./resources/models/shallow_mind", 'q_learning.pickle')
-SAVE = True
 logs_path = os.path.join("./logs",
                          f'{time()}, EPS:{EPSILON}, LR:{LEARNING_RATE}, DF:{DISCOUNT_FACTOR}, RC:{REWARD_CONST}, PC:{PUNISHMENT_CONST}.csv')
 logs = []
@@ -42,7 +41,7 @@ class ShallowMindController:
         return hash(self.first_name)
 
     def save(self):
-        if SAVE:
+        if LEARN:
             with open(path, 'wb') as handle:
                 pickle.dump(self.q_learning.q, handle, protocol=pickle.HIGHEST_PROTOCOL)
 

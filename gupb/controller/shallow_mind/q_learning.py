@@ -73,7 +73,7 @@ class QLearning:
     def calculate_reward(self, arena: ArenaWrapper) -> int:
         dist = arena.calc_mist_dist()
         if dist > 0:
-            return math.ceil(REWARD_CONST / dist)
+            return math.floor(REWARD_CONST / dist)
         if arena.position == arena.menhir_destination:
             return 1
         elif dist == 0 or self.old_action == StrategyAction.GO_TO_MENHIR:
