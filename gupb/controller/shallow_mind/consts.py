@@ -1,3 +1,7 @@
+from enum import Enum
+
+import numpy as np
+
 from gupb.model.tiles import Menhir, Wall, Sea, Land
 from gupb.model.weapons import Knife, Sword, Bow, Axe, Amulet
 
@@ -14,6 +18,26 @@ WEAPONS_MAP = {weapon().description(): weapon for weapon, _ in WEAPONS}
 
 WEAPONS_ENCODING = {weapon().description(): value for weapon, value in WEAPONS}
 
-FIELD_ATTACKED = FIELD_WEIGHT * FIELD_WEIGHT
+FIELD_ATTACKED = FIELD_WEIGHT * FIELD_WEIGHT * 2
 
 WEAPONS_PRIORITY = [weapon[0]().description() for weapon in WEAPONS]
+# q_learning consts
+# EPSILON = 0.1
+EPSILON = 0
+LEARNING_RATE = 0.3
+DISCOUNT_FACTOR = 0.65
+REWARD_CONST = 10.0
+PUNISHMENT_CONST = REWARD_CONST
+
+
+class StrategyAction(Enum):
+    HIDE = 1,
+    GO_TO_MENHIR = 2,
+
+
+# todo should be read from map folder
+ARENA_NAMES = ['archipelago', 'dungeon', 'fisher_island', 'wasteland', 'island', 'mini']
+
+# Q-LEARNING
+DIST_PROPORTION_BINS = np.linspace(1, 4, num=6)
+MIST_BINS = [0, 1, 2, 3, 5, 10]
