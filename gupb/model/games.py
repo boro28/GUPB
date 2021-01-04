@@ -99,16 +99,16 @@ class Game(statemachine.StateMachine):
                 death = ChampionDeath(champion, self.episode)
                 self.deaths.append(death)
         self.champions = alive
-        if len(self.champions) == 1:
-            verbose_logger.debug(f"Champion {self.champions[0].controller.name} was the last one standing.")
-            LastManStandingReport(self.champions[0].controller.name).log(logging.DEBUG)
-            champion = self.champions.pop()
-            death = ChampionDeath(champion, self.episode)
-            self.deaths.append(death)
-
-            win_callable = getattr(champion.controller, "win", None)
-            if win_callable:
-                win_callable()
+        # if len(self.champions) == 0:
+        #     verbose_logger.debug(f"Champion {self.champions[0].controller.name} was the last one standing.")
+        #     LastManStandingReport(self.champions[0].controller.name).log(logging.DEBUG)
+        #     champion = self.champions.pop()
+        #     death = ChampionDeath(champion, self.episode)
+        #     self.deaths.append(death)
+        #
+        #     win_callable = getattr(champion.controller, "win", None)
+        #     if win_callable:
+        #         win_callable()
 
         if not self.champions:
             self.finished = True

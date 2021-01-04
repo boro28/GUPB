@@ -13,9 +13,13 @@ from gupb.model.profiling import PROFILE_RESULTS, print_stats
 from gupb.logger import core as logger_core
 from gupb.model import coordinates
 from gupb.model import games
+from gupb.model.coordinates import Coords
 from gupb.view import render
 
 verbose_logger = logging.getLogger('verbose')
+
+DISCOUNT_FACTOR_INCREASE = 0.1
+DISCOUNT_FACTOR_COUNTER = 1000
 
 
 class Runner:
@@ -37,6 +41,8 @@ class Runner:
 
     def run(self) -> None:
         for i in trange(self.runs_no, desc="Playing games"):
+            # if i % DISCOUNT_FACTOR_COUNTER == 0:
+            #     DISCOUNT_FACTOR += DISCOUNT_FACTOR_INCREASE
             verbose_logger.info(f"Starting game number {i + 1}.")
             GameStartReport(i + 1).log(logging.INFO)
             self.run_game(i)
@@ -48,9 +54,11 @@ class Runner:
         if not self.start_balancing or game_no % len(self.controllers) == 0:
             random.shuffle(self.controllers)
             game = games.Game(arena, self.controllers)
+            # game = games.Game(arena, self.controllers, Coords(x=1, y=3))
         else:
             self.controllers = self.controllers[1:] + [self.controllers[0]]
-            game = games.Game(self._last_arena, self.controllers, self._last_menhir_position, self._last_initial_positions)
+            game = games.Game(self._last_arena, self.controllers, self._last_menhir_position,
+                              self._last_initial_positions)
         self._last_arena = game.arena.name
         self._last_menhir_position = game.arena.menhir_position
         self._last_initial_positions = game.initial_champion_positions
@@ -67,6 +75,10 @@ class Runner:
     def print_scores(self) -> None:
         verbose_logger.info(f"Final scores.")
         scores_to_log = []
+        for ctr in self.controllers:
+            save = getattr(ctr, "save", None)
+            if save:
+                save()
         for i, (name, score) in enumerate(sorted(self.scores.items(), key=lambda x: x[1], reverse=True)):
             score_line = f"{i + 1}.   {name}: {score}."
             verbose_logger.info(score_line)
