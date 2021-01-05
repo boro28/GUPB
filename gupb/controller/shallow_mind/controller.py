@@ -12,7 +12,7 @@ from gupb.model.arenas import ArenaDescription
 from gupb.model.characters import Action, ChampionKnowledge
 from queue import SimpleQueue
 
-path = os.path.join("./resources/models/shallow_mind", 'q_learning.pickle')
+path = os.path.join("./resources/models/shallow_mind", 'q_learning_new.pickle')
 logs_path = os.path.join("./logs",
                          f'{time()}, EPS:{EPSILON}, LR:{LEARNING_RATE}, DF:{DISCOUNT_FACTOR}, RC:{REWARD_CONST}, PC:{PUNISHMENT_CONST}.csv')
 logs = []
@@ -23,7 +23,6 @@ class ShallowMindController:
         self.first_name: str = first_name
         self.arena: ArenaWrapper = None
         self.action_queue: SimpleQueue[Action] = SimpleQueue()
-        self.bow_taken = False
         self.q_learning = QLearning()
         try:
             with open(path, 'rb') as handle:
@@ -52,10 +51,9 @@ class ShallowMindController:
 
     def reset(self, arena_description: ArenaDescription) -> None:
         reward = self.q_learning.reset(self.arena)
-        if self.arena:
+        if LEARN and self.arena:
             logs.append((reward, self.arena.position == self.arena.menhir_destination, self.arena.move_to_menhir.time))
         self.arena = ArenaWrapper(arena_description)
-        self.bow_taken = False
 
     def decide(self, knowledge: ChampionKnowledge) -> Action:
         self.arena.prepare_matrix(knowledge)
