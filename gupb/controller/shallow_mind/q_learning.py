@@ -78,7 +78,7 @@ class QLearning:
         dist = arena.calc_mist_dist()
         if dist > 0:
             if dist > 10 and self.old_action == StrategyAction.GO_TO_MENHIR:
-                return -1
+                return -5
             return math.floor(REWARD_CONST / dist)
         if arena.position == arena.menhir_destination:
             return 1
