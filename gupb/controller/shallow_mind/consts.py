@@ -32,10 +32,10 @@ class StrategyAction(Enum):
 ARENA_NAMES = ['archipelago', 'dungeon', 'fisher_island', 'wasteland', 'island', 'mini']
 
 # q_learning consts
-EPSILON = 0.1
-# EPSILON = 0
-LEARNING_RATE = 0.15
-DISCOUNT_FACTOR = 0.9
+# EPSILON = 0.1
+EPSILON = 0
+LEARNING_RATE = 0.1
+DISCOUNT_FACTOR = 0.99
 REWARD_CONST = 10.0
 PUNISHMENT_CONST = REWARD_CONST
 
