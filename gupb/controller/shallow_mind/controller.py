@@ -5,7 +5,7 @@ from time import time
 
 from gupb.controller.shallow_mind.arenna_wrapper import ArenaWrapper
 from gupb.controller.shallow_mind.consts import StrategyAction, EPSILON, LEARNING_RATE, DISCOUNT_FACTOR, REWARD_CONST, \
-    PUNISHMENT_CONST, LEARN
+    PUNISHMENT_CONST, LEARN, WEAPONS_PRIORITY
 from gupb.controller.shallow_mind.q_learning import QLearning
 from gupb.model import characters
 from gupb.model.arenas import ArenaDescription
@@ -58,8 +58,27 @@ class ShallowMindController:
     def decide(self, knowledge: ChampionKnowledge) -> Action:
         self.arena.prepare_matrix(knowledge)
         action = self.q_learning.attempt(self.arena)
-        if action == StrategyAction.GO_TO_MENHIR:
+        if action == StrategyAction.GO_TO_MENHIR and self.arena.move_to_menhir.time:
             return self.arena.move_to_menhir.action
+
+        if not self.action_queue.empty():
+            return self.action_queue.get()
+        champ = self.arena.champion
+        if self.arena.can_hit:
+            return Action.ATTACK
+        if self.arena.prev_champion:
+            if champ.health != self.arena.prev_champion.health and self.arena.calc_mist_dist() > 0:
+                action = self.arena.find_escape_action()
+                if action != Action.DO_NOTHING:
+                    self.action_queue.put(Action.STEP_FORWARD)
+                    return action
+        for weapon in WEAPONS_PRIORITY:
+            if champ.weapon == weapon:
+                break
+            action_to_weapon = self.arena.find_move_to_nearest_weapon(weapon)
+            if action_to_weapon.reachable:
+                return action_to_weapon.action
+
         return self.arena.find_scan_action()
 
     @property
