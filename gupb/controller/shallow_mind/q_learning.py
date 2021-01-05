@@ -47,10 +47,10 @@ class QLearning:
             return self.best_action(state)
 
     def update_q(self, state: State, action: StrategyAction, reward: int) -> None:
-        learning_rate = min(LEARNING_RATE_MIN,
-                            LEARNING_RATE - math.floor(self.episodes % LEARNING_CHANGE_COUNT) * LEARNING_RATE_CHANGE)
-        discount_factor = max(DISCOUNT_FACTOR_MAX, DISCOUNT_FACTOR + math.floor(
-            self.episodes % LEARNING_CHANGE_COUNT) * DISCOUNT_FACTOR_CHANGE)
+        multiplier = math.floor(self.episodes / LEARNING_CHANGE_COUNT)
+        learning_rate = max(LEARNING_RATE_MIN,
+                            LEARNING_RATE - multiplier * LEARNING_RATE_CHANGE)
+        discount_factor = min(DISCOUNT_FACTOR_MAX, DISCOUNT_FACTOR + multiplier * DISCOUNT_FACTOR_CHANGE)
         if self.old_state and self.old_action:
             self.q[(self.old_state, self.old_action)] += learning_rate * (
                     reward + discount_factor * self.q[(state, action)] - self.q[(self.old_state, self.old_action)])
