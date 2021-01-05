@@ -34,15 +34,15 @@ ARENA_NAMES = ['archipelago', 'dungeon', 'fisher_island', 'wasteland', 'island',
 # q_learning consts
 EPSILON = 0.1
 # EPSILON = 0
-LEARNING_RATE = 0.15
-DISCOUNT_FACTOR = 0.9
+LEARNING_RATE = 0.1
+DISCOUNT_FACTOR = 0.99
 REWARD_CONST = 10.0
 PUNISHMENT_CONST = REWARD_CONST
 
 DIST_PROPORTION_BINS = np.linspace(1, 6, num=6)
 DIST_BINS = [1, 3, 5, 10, 25, 50]
 MIST_BINS = [0, 1, 2, 3, 5, 10]
-LEARN = True
+LEARN = False
 
 LEARNING_CHANGE_COUNT = 400
 LEARNING_RATE_CHANGE = 0.05

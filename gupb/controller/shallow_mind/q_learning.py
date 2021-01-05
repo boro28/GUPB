@@ -60,9 +60,10 @@ class QLearning:
     def attempt(self, arena: ArenaWrapper) -> StrategyAction:
         state = self.discretise(arena)
         action = self.pick_action(state)
-        reward = self.calculate_reward(arena)
-        self.reward_sum += reward
-        self.update_q(state, action, reward)
+        if LEARN:
+            reward = self.calculate_reward(arena)
+            self.reward_sum += reward
+            self.update_q(state, action, reward)
         return action
 
     def discretise(self, arena: ArenaWrapper) -> State:
